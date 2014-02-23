@@ -1,7 +1,6 @@
 package com.copypaste.run;
 
-import com.copypaste.CopyPasteUI;
-import com.copypaste.MemoryMappedCopyLogicImpl;
+import com.copypaste.impls.CopyPasteUIImpl;
 
 public class CPMain {
  /**
@@ -9,9 +8,8 @@ public class CPMain {
   */
 	public static void main(String[] args) {
 		if(args[0].equalsIgnoreCase("cp")){
-			CopyPasteUI<String> cp = new CopyPasteUI<>();
-			cp.injectLogic(new MemoryMappedCopyLogicImpl());
-			cp.showGui();
+			CopyPasteUIImpl<String> cp = new CopyPasteUIImpl<>("Copy Paste");
+			cp.showUI();
 		}
 	}
 }
