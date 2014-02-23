@@ -47,7 +47,5 @@ public class HistoricalCombo<E> extends JComboBox<E> implements Serializable {
 	private ComboBoxModel<E> prepareModel() {
 		Object[] elements = browsingHistoryList.toArray();
 		return (ComboBoxModel<E>) new DefaultComboBoxModel<>(elements);
-
 	}
-	
 }
