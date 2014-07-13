@@ -1,7 +1,5 @@
 package com.copypaste.run;
 
-import javax.swing.JFrame;
-
 import com.copypaste.CopyPasteUI;
 import com.copypaste.impls.CopyPasteUIImpl;
 import com.copypaste.logic.CopyPasteLogic;
@@ -19,7 +17,7 @@ public class CPBuilder {
 	}
 
 	private CopyPasteUI buildUI() {
-		return new CopyPasteUIImpl<>("Copy Paste").buildUI();
+		return new CopyPasteUIImpl<>("Copy Paste").build();
 	}
 
 	private CopyPasteLogic buildLogic() {
