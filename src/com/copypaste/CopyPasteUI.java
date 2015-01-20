@@ -10,6 +10,6 @@ public abstract class CopyPasteUI<E> extends JFrame {
 		super(title);
 	}
 
-	public abstract CopyPasteUI buildUI();
+	public abstract CopyPasteUI build();
 	public abstract void showUI();
 }

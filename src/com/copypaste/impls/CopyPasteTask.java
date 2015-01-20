@@ -11,10 +11,9 @@ import java.util.concurrent.Future;
 
 import com.copypaste.Task;
 import com.copypaste.adapter.CallableAdapter;
-import com.copypaste.logic.CopyPasteLogic;
-import com.copypaste.util.Utils;
 import com.copypaste.util.Constants.COPY_OPTION;
 import com.copypaste.util.Constants.STATE;
+import com.copypaste.util.Utils;
 
 public class CopyPasteTask<T> implements Task<T> {
 	private STATE currentState;
@@ -28,7 +27,6 @@ public class CopyPasteTask<T> implements Task<T> {
 	}
 
 	// TODO
-	// this should come from config
 	ExecutorService service = Executors.newFixedThreadPool(2);
 
 	@Override
@@ -46,12 +44,20 @@ public class CopyPasteTask<T> implements Task<T> {
 			setState(STATE.DOING);
 			synchronized (communicationChannel) {
 				if (copyOption.compareTo(copyOption.FILE) == 0) {
-					Future<?> future = service.submit(new CallableAdapter<>(
-							new MemoryMappedCopyPasteImpl<String>(
-									sourceLocation, destLocation)));
+					String pathname[] = sourceLocation.split("\\\\");
+					destLocation = destLocation.endsWith("\\") ? destLocation
+							+ pathname[pathname.length - 1] : destLocation
+							+ "\\" + pathname[pathname.length - 1];
+
+					Future<?> future = singleTask(sourceLocation, destLocation);
+					/*
+					 * service.submit(new CallableAdapter<>(new
+					 * MemoryMappedCopyPasteImpl<String>( sourceLocation,
+					 * destLocation)));
+					 */
 					System.out.println(future.get());
 					Utils.showMsg("File copied src-" + sourceLocation
-							+ " destination-" + destLocation);
+							+ "\n destination-" + destLocation);
 					makeReady();
 					communicationChannel.notifyAll();
 				} else {
@@ -64,6 +70,12 @@ public class CopyPasteTask<T> implements Task<T> {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private Future<?> singleTask(String src, String dest) {
+
+		return service.submit(new CallableAdapter<>(
+				new MemoryMappedCopyPasteImpl<String>(src, dest)));
 	}
 
 	private void doDirectoryCopyPaste() {
@@ -96,9 +108,7 @@ public class CopyPasteTask<T> implements Task<T> {
 
 		List<Future> futureList = new ArrayList<Future>();
 		for (int index = 0; index < srcFileList.size(); index++) {
-			CopyPasteLogic<String> logic = new MemoryMappedCopyPasteImpl<String>(
-					srcFileList.get(index), destFileList.get(index));
-			futureList.add(service.submit(new CallableAdapter<>(logic)));
+			futureList.add(singleTask(srcFileList.get(index), destFileList.get(index)));
 		}
 
 		Utils.showMsg(summaryBuilder(futureList, srcFileList));
@@ -121,7 +131,7 @@ public class CopyPasteTask<T> implements Task<T> {
 				e.printStackTrace();
 			}
 		}
-		return "Copied successfully [" + success + "] \\n Failed [" + failed
+		return "Copied successfully [" + success + "] \n Failed [" + failed
 				+ "]";
 	}
 

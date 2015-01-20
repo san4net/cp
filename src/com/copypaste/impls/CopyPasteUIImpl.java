@@ -153,12 +153,12 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		final CopyPasteUIImpl<String> cp = new CopyPasteUIImpl<String>(
 				"copy paste");
 		if (SwingUtilities.isEventDispatchThread()) {
-			cp.buildUI();
+			cp.build();
 		} else {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					cp.buildUI();
+					cp.build();
 				}
 			});
 		}
@@ -238,7 +238,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 	}
 
 	@Override
-	public CopyPasteUI<E> buildUI() {
+	public CopyPasteUI<E> build() {
 		if (SwingUtilities.isEventDispatchThread()) {
 			createComponents();
 			initializeComponent();
@@ -247,7 +247,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 			SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-					buildUI();
+					build();
 				}
 			});
 		}
