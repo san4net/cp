@@ -25,7 +25,7 @@ import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import com.copypaste.CopyPasteUI;
 import com.copypaste.HistoricalCombo;
