@@ -20,6 +20,7 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
@@ -46,12 +47,13 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 	private CopyPasteTask copypastTask = new CopyPasteTask<>(sharedChannel);
 	private JLabel srcLabel;
 	private JLabel destLabel;
-	private JButton copyPasteButton = new JButton("Copy Paste");
+	private JButton copyPasteButton ;
 	private JComboBox<E> srcCombo;
 	private JComboBox<E> destCombo;
 	private static ButtonGroup buttonGroup = new ButtonGroup();
 	private JRadioButton fileButton;
 	private JRadioButton directoryButton;
+	private JProgressBar progressBar;
 
 	private static Object[][] errCodeErrMsg = { { 0, "done" },
 			{ 1, "Pls enter proper url" }, { 2, "Entered file doesnot exist" },
@@ -68,7 +70,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		srcLabel = new JLabel("Copy : ", JLabel.TRAILING);
 		destLabel = new JLabel("Paste : ");
 
-		copyPasteButton = new JButton("Copy Paste");
+		copyPasteButton = new JButton("Copy");
 		copyPasteButton.addActionListener(listener);
 
 		fileButton = new JRadioButton("file");
@@ -78,6 +80,10 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		directoryButton = new JRadioButton("Directory");
 		directoryButton.setActionCommand(Constants.actionCommands[1]);
 		directoryButton.setName("directoryButton");
+		
+		progressBar = new JProgressBar(0, 100);
+        progressBar.setValue(0);
+        progressBar.setStringPainted(true);
 
 		buttonGroup.add(fileButton);
 		buttonGroup.add(directoryButton);
@@ -86,9 +92,8 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 	private void putThingsTogetherForDisplay() {
 		Utils.checkNotNull(srcCombo);
 		Utils.checkNotNull(destCombo);
-		srcCombo.setSize(new Dimension(450, srcCombo.getPreferredSize().height));
-		destCombo.setSize(new Dimension(450,
-				destCombo.getPreferredSize().height));
+		srcCombo.setSize(new Dimension(700, srcCombo.getPreferredSize().height));
+		destCombo.setSize(new Dimension(700, destCombo.getPreferredSize().height));
 
 		SpringLayout layout = new SpringLayout();
 
@@ -108,6 +113,8 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		mainPanel.add(destCombo);
 
 		mainPanel.add(copyPasteButton);
+		mainPanel.add(progressBar);
+		
 		int index = 5;
 		layout.putConstraint(SpringLayout.NORTH, buttonPanel, index,
 				SpringLayout.NORTH, contentPane);
@@ -136,10 +143,13 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		layout.putConstraint(SpringLayout.WEST, destCombo, index,
 				SpringLayout.EAST, destLabel);
 
-		layout.putConstraint(SpringLayout.NORTH, copyPasteButton, index,
-				SpringLayout.SOUTH, buttonPanel);
-		layout.putConstraint(SpringLayout.WEST, copyPasteButton, index,
-				SpringLayout.EAST, destCombo);
+		layout.putConstraint(SpringLayout.NORTH, copyPasteButton, index+5,
+				SpringLayout.SOUTH, srcLabel);
+		layout.putConstraint(SpringLayout.WEST, copyPasteButton, index+5,
+				SpringLayout.WEST, contentPane);
+		
+		layout.putConstraint(SpringLayout.NORTH, progressBar, index+10, SpringLayout.SOUTH, srcLabel);
+		layout.putConstraint(SpringLayout.WEST, progressBar, index+5, SpringLayout.EAST, copyPasteButton);
 
 		add(mainPanel);
 	}
@@ -256,7 +266,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 
 	@Override
 	public void showUI() {
-		copyPasteButton.setEnabled(true);
+		//copyPasteButton.setEnabled(true);
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		pack();
 		setSize(new Dimension(600, 300));
