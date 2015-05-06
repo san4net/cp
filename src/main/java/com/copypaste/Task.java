@@ -7,10 +7,6 @@ package com.copypaste;
  * @param <T>
  */
 public interface Task<T> {
-	/**
-	 * 
-	 */
-	void injectLogic(String logic);
 	
 	void start();
 
@@ -19,4 +15,10 @@ public interface Task<T> {
 	boolean terminate();
 
 	void finish();
+	
+	long size();
+	
+	long completedSize();
+	
+	String getSummary();
 }

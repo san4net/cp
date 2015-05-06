@@ -9,7 +9,7 @@ import com.copypaste.logic.CopyPasteLogic;
 public class MemoryMappedCopyPasteImpl<T> implements CopyPasteLogic<T> {
 	volatile boolean copied = false;
 	T sourceFile, destFile;
-
+	private long size = 0;
 
 	public MemoryMappedCopyPasteImpl() {
 	}
@@ -22,13 +22,15 @@ public class MemoryMappedCopyPasteImpl<T> implements CopyPasteLogic<T> {
 
 	@Override
 	public T copyPaste() throws Exception {
-		int status = -1;
+		long status = -1;
 		RandomAccessFile rafIn = new RandomAccessFile((String) sourceFile, "rw");
 		RandomAccessFile rafOut = new RandomAccessFile((String) destFile, "rw");
-
+		size = rafIn.length();
+		
 		if (rafIn.getChannel() == null || rafOut.getChannel() == null) {
-			return (T) Integer.valueOf(status);
+			return (T) Long.valueOf(status);
 		}
+		
 
 		try (FileChannel fcIn = rafIn.getChannel();
 				FileChannel fcOut = rafOut.getChannel();) {
@@ -44,12 +46,14 @@ public class MemoryMappedCopyPasteImpl<T> implements CopyPasteLogic<T> {
 			System.out.println("Memory mapped copy Time for a file of size :"
 					+ (int) fcIn.size() + " in sec : " + (timeOut - timeIn)
 					/ 1000);
-			status = 0;
+			status = size ;
 			copied = true;
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			status = 0;
 		}
+		
 		return (T) String.valueOf(status);
 	}
 
@@ -72,6 +76,14 @@ public class MemoryMappedCopyPasteImpl<T> implements CopyPasteLogic<T> {
 	
 	public void setDestFile(T destFile) {
 		this.destFile = destFile;
+	}
+	/**
+	 * This is size of the file
+	 */
+	@Override
+	public long size() {
+		// TODO Auto-generated method stub
+		return size;
 	}
 	
 }

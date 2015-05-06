@@ -3,9 +3,13 @@ package com.copypaste.impls;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,8 +26,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
 import javax.swing.SpringLayout;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 
 import org.apache.commons.lang.StringUtils;
@@ -35,7 +41,7 @@ import com.copypaste.util.Constants.COPY_OPTION;
 import com.copypaste.util.Constants.STATE;
 import com.copypaste.util.Utils;
 
-public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
+public  class CopyPasteUIImpl<E>  extends CopyPasteUI<E>  {
 	/**
 	 * 
 	 */
@@ -54,7 +60,8 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 	private JRadioButton fileButton;
 	private JRadioButton directoryButton;
 	private JProgressBar progressBar;
-
+	private JTextArea taskOutput;
+    private Task backGroundTask;
 	private static Object[][] errCodeErrMsg = { { 0, "done" },
 			{ 1, "Pls enter proper url" }, { 2, "Entered file doesnot exist" },
 			{ 3, "Directory doesnot exit" } };
@@ -84,7 +91,11 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		progressBar = new JProgressBar(0, 100);
         progressBar.setValue(0);
         progressBar.setStringPainted(true);
-
+        
+        taskOutput = new JTextArea(5, 20);
+        taskOutput.setMargin(new Insets(5,5,5,5));
+        taskOutput.setEditable(false);
+        
 		buttonGroup.add(fileButton);
 		buttonGroup.add(directoryButton);
 	}
@@ -114,6 +125,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 
 		mainPanel.add(copyPasteButton);
 		mainPanel.add(progressBar);
+		mainPanel.add(taskOutput);
 		
 		int index = 5;
 		layout.putConstraint(SpringLayout.NORTH, buttonPanel, index,
@@ -150,7 +162,10 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		
 		layout.putConstraint(SpringLayout.NORTH, progressBar, index+10, SpringLayout.SOUTH, srcLabel);
 		layout.putConstraint(SpringLayout.WEST, progressBar, index+5, SpringLayout.EAST, copyPasteButton);
-
+		
+		layout.putConstraint(SpringLayout.NORTH, taskOutput , index+5, SpringLayout.SOUTH, progressBar);
+		layout.putConstraint(SpringLayout.WEST, taskOutput , index+5, SpringLayout.WEST, contentPane);
+		
 		add(mainPanel);
 	}
 
@@ -184,8 +199,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 				String destLoc = (String) destCombo.getSelectedItem();
 
 				if (StringUtils.isEmpty(srcLoc) || StringUtils.isEmpty(destLoc)) {
-					JOptionPane.showMessageDialog((Component) e.getSource(),
-							"Pls enter proper url");
+					JOptionPane.showMessageDialog((Component) e.getSource(), "Pls enter proper url");
 					copyPasteButton.setEnabled(true);
 					return;
 				}
@@ -199,6 +213,10 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 							.setFile(fileButton.isSelected() ? COPY_OPTION.FILE
 									: COPY_OPTION.DIRECTORY);
 					copypastTask.start();
+					backGroundTask = new Task();
+					backGroundTask.addPropertyChangeListener(propertyChangeListener);
+					backGroundTask.execute();
+					
 					while (copypastTask.getCurrentState() != STATE.READEY) {
 						sharedChannel.wait();
 					}
@@ -208,6 +226,20 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 				}
 
 			}
+		}
+	};
+	
+	private PropertyChangeListener propertyChangeListener = new PropertyChangeListener() {
+		
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			if ("progress".equals(evt.getPropertyName())) {
+	        int progress = (Integer) evt.getNewValue();
+	        progressBar.setValue(progress);
+	        taskOutput.append(String.format(
+	                "Completed %d%% of task.\n", backGroundTask.getProgress()));
+	    } 
+			
 		}
 	};
 
@@ -222,6 +254,7 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 			objectOut.writeObject(srcCombo);
 			objectOut.writeObject(destCombo);
 			System.out.println("object written");
+			backGroundTask.cancel(true);
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -273,5 +306,41 @@ public class CopyPasteUIImpl<E> extends CopyPasteUI<E> {
 		setVisible(true);
 
 	}
+	
+	class Task extends SwingWorker<Void, Void> {
+        /*
+         * Main task. Executed in background thread.
+         */
+        @Override
+        public Void doInBackground() {
+            setProgress(0);
+            
+            while(copypastTask.completedSize() != copypastTask.size()){
+            	 try {
+                     Thread.sleep(1000);
+                 } catch (InterruptedException ignore) {}
+            	 
+            	double percentage = ( copypastTask.completedSize()/copypastTask.size()) * 100;
+            	int temp = (int) percentage;
+            	setProgress(temp);
+            } 
+            
+            if( copypastTask.completedSize() == copypastTask.size()){
+            	setProgress(100);
+            }
+            return null;
+        }
 
+        /*
+         * Executed in event dispatching thread
+         */
+        @Override
+        public void done() {
+            Toolkit.getDefaultToolkit().beep();
+            setCursor(null); //turn off the wait cursor
+            taskOutput.append("Done!\n");
+            taskOutput.append(copypastTask.getSummary());
+        }
+    }
+	
 }
