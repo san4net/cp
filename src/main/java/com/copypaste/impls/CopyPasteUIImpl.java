@@ -254,7 +254,9 @@ public  class CopyPasteUIImpl<E>  extends CopyPasteUI<E>  {
 			objectOut.writeObject(srcCombo);
 			objectOut.writeObject(destCombo);
 			System.out.println("object written");
-			backGroundTask.cancel(true);
+			if(backGroundTask != null){
+				backGroundTask.cancel(true);
+			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
